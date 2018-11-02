@@ -101,6 +101,7 @@ dateTime={EVENT.RECOVERY.DATE}T{EVENT.RECOVERY.TIME}Z
 def parse_zabbix(subject, message):
 
     alert = {}
+    event = ""
     attributes = {}
     zabbix_severity = False
     for line in message.split('\n'):
@@ -124,6 +125,8 @@ def parse_zabbix(subject, message):
             value = value.split(', ')
         elif macro.startswith('attributes.'):
             attributes[macro.replace('attributes.', '')] = value
+        elif macro == 'event':
+            event = value
 
         alert[macro] = value
         LOG.debug('%s -> %s', macro, value)
@@ -147,7 +150,7 @@ def parse_zabbix(subject, message):
     alert['origin'] = "zabbix/%s" % os.uname()[1]
     alert['rawData'] = "%s\n\n%s" % (subject, message)
 
-    return alert
+    return alert, event
 
 
 def main():
@@ -218,8 +221,8 @@ def main():
 
     LOG.debug("[alerta] sendto=%s, summary=%s, body=%s", args.sendto, args.summary, args.body)
     try:
-        alert = parse_zabbix(args.summary, args.body)
-        api.send_alert(**alert)
+        alert, event = parse_zabbix(args.summary, args.body)
+        api.send_alert(**alert, event)
     except (SystemExit, KeyboardInterrupt):
         LOG.warning("Exiting zabbix-alerta.")
         sys.exit(0)
