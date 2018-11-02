@@ -222,7 +222,7 @@ def main():
     LOG.debug("[alerta] sendto=%s, summary=%s, body=%s", args.sendto, args.summary, args.body)
     try:
         alert, event = parse_zabbix(args.summary, args.body)
-        api.send_alert(**alert, event)
+        api.send_alert(alert, event)
     except (SystemExit, KeyboardInterrupt):
         LOG.warning("Exiting zabbix-alerta.")
         sys.exit(0)
